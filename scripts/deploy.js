@@ -34,7 +34,6 @@ async function main() {
     // Deploy timelock
     const minDelay = 5 // How long do we have to wait until we can execute after a passed proposal
     // (5 blocs ~> 1 min as each block takes about 12 seconds to be validated )
-
     // In addition to passing minDelay, two arrays are passed:
     // The 1st array contains addresses of members who are allowed to make a proposal.
     // The 2nd array contains addresses of members who are allowed to make executions.
@@ -67,13 +66,7 @@ async function main() {
     )
     await charityGovernor.waitForDeployment()
 
-    // Deploy Treasury
-
-    // Timelock contract will be the owner of our treasury contract.
-    // In the provided example, once the proposal is successful and executed,
-    // timelock contract will be responsible for calling the function.
-
-    // The token contract is owned by the treasury
+    // The token contract is owned by the charityTimelock which is also the treasury
     await charityToken.transferOwnership(await charityTimelock.getAddress(), {
         from: deployer,
     })
@@ -83,14 +76,10 @@ async function main() {
         from: deployer,
     })
 
-    // The tresury contract is owned by the timelock
-    // await charityTreasury.transferOwnership(await timelock.getAddress(), {
-    //     from: deployer,
-    // })
-
     // Assign roles
     const proposerRole = await charityTimelock.PROPOSER_ROLE()
     const executorRole = await charityTimelock.EXECUTOR_ROLE()
+    const adminRole = await charityTimelock.DEFAULT_ADMIN_ROLE()
 
     await charityTimelock.grantRole(
         proposerRole,
@@ -108,6 +97,7 @@ async function main() {
     )
 
     ///////////// Renounce admin role
+    await charityTimelock.renounceRole(adminRole, deployer)
 
     console.log({
         token: await charityToken.getAddress(),

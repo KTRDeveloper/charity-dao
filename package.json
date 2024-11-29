@@ -3,11 +3,30 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "markdown-to-html": {
+    "document": {
+      "title": "Developing, Deploying and operating a DAO",
+      "description": "A simple tutorial that shows how to develop, deploy and operate a Decentralized Autonomous Organization (DAO).",
+      "meta": [{
+          "description": "A simple tutorial that shows how to develop, deploy and operate a Decentralized Autonomous Organization (DAO)."
+        },
+        {
+          "keywords": "DAO,Solidity,dApp,DAO development, DAO deployment"
+        }
+      ]
+    },
+    "favicon": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>",
+    "github-corners": "https://github.com/KTRDeveloper/charity-dao"
+  },
+  "scripts": {
+    "docs": "markdown-to-html --source docs/index.md --output docs/index.html"
+  },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^3.0.8",
     "@nomicfoundation/hardhat-verify": "^2.0.11",
     "ethers": "^6.13.4",
-    "hardhat": "^2.22.15"
+    "hardhat": "^2.22.15",
+    "markdown-to-html-cli": "^4.1.0"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.1.0",
