@@ -16,7 +16,7 @@ async function main() {
         members,
     })
 
-    const supply = ethers.parseEther('300') // 300 Tokens
+    const supply = ethers.parseEther('600') // 600 Tokens
 
     // Deploy token
     const charityToken = await CharityToken.deploy(deployer)
@@ -26,7 +26,7 @@ async function main() {
     await txmint.wait()
 
     // 100 Tokens are given to each member and leaving 100 tokens to executor
-    const amount = ethers.parseEther('100')
+    const amount = ethers.parseEther('200')
     members.forEach(async (member) => {
         await charityToken.transfer(member, amount, { from: deployer })
     })
@@ -96,7 +96,7 @@ async function main() {
         }
     )
 
-    ///////////// Renounce admin role
+    // Renounce admin role
     await charityTimelock.renounceRole(adminRole, deployer)
 
     console.log({
