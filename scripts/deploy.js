@@ -16,22 +16,14 @@ async function main() {
         members,
     })
 
-    const supply = ethers.parseEther('600') // 600 Tokens
-
     // Deploy token
+    console.log('Deploying CharityToken ...')
     const charityToken = await CharityToken.deploy(deployer)
     await charityToken.waitForDeployment()
-
-    const txmint = await charityToken.mint(deployer, supply)
-    await txmint.wait()
-
-    // 100 Tokens are given to each member and leaving 100 tokens to executor
-    const amount = ethers.parseEther('200')
-    members.forEach(async (member) => {
-        await charityToken.transfer(member, amount, { from: deployer })
-    })
+    console.log('CharityToken deployed!')
 
     // Deploy timelock
+    console.log('Deploying CharityTimelock ...')
     const minDelay = 5 // How long do we have to wait until we can execute after a passed proposal
     // (5 blocs ~> 1 min as each block takes about 12 seconds to be validated )
     // In addition to passing minDelay, two arrays are passed:
@@ -47,10 +39,9 @@ async function main() {
         charityToken
     )
     await charityTimelock.waitForDeployment()
-
+    console.log('CharityTimelock Deployed!')
     // Deploy governanace
-    // GovernorSettings(0 /* 0 day */, 75 /* 15 minutes */, 0)
-
+    console.log('Deploying CharityGovernor ...')
     const initialVotingDelay = 0 // Delay since proposal is created until voting starts
     const initialVotingPeriod = 75 // Length of period during which people can cast their vote. (75 blocs ~> 15 min as each block takes about 12 seconds to be validated )
     const initialProposalThreshold = 0 // Minimum number of votes an account must have to create a proposal.
@@ -65,16 +56,42 @@ async function main() {
         quorum
     )
     await charityGovernor.waitForDeployment()
+    console.log('CharityGovernor Deployed!')
 
     // The token contract is owned by the charityTimelock which is also the treasury
     await charityToken.transferOwnership(await charityTimelock.getAddress(), {
         from: deployer,
     })
 
-    // 700 additional tokens are minted for tresury
-    await charityTimelock.mintTokens(ethers.parseEther('700'), {
-        from: deployer,
-    })
+    const supplyCHT = '1000' // 1000 Tokens
+    const txMintTokens = await charityTimelock.mintTokens(
+        ethers.parseEther(supplyCHT),
+        {
+            from: deployer,
+        }
+    )
+    await txMintTokens.wait()
+    console.log(`${supplyCHT} CHT minted`)
+
+    // 50 Tokens are transfered to each member
+    const amountCHT = '50'
+    for (let i = 0; i < members.length; i++) {
+        const txTransferTokens = await charityTimelock.transferTokens(
+            members[i],
+            ethers.parseEther(amountCHT),
+            { from: deployer }
+        )
+        await txTransferTokens.wait()
+        console.log(`${amountCHT} CHT transfered to ${members[i]}`)
+    }
+
+    // The treasury is owned by the charityTimelock
+    await charityTimelock.transferOwnership(
+        await charityTimelock.getAddress(),
+        {
+            from: deployer,
+        }
+    )
 
     // Assign roles
     const proposerRole = await charityTimelock.PROPOSER_ROLE()

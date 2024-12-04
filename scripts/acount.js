@@ -1,7 +1,8 @@
-var ethers = require('ethers')
-var crypto = require('crypto')
-var id = crypto.randomBytes(32).toString('hex')
-var privateKey = '0x' + id
-console.log('PRIVATE KEY:', privateKey)
-var wallet = new ethers.Wallet(privateKey)
-console.log('Address: ' + wallet.address)
+const { HDNodeWallet } = require('ethers')
+
+const wallet = HDNodeWallet.createRandom()
+console.log('\n ------------------------------------ \n')
+console.log('Wallet address:', wallet.address)
+console.log('Wallet mnemonic phrase:', wallet.mnemonic.phrase)
+console.log('Wallet privateKey:', wallet.privateKey)
+console.log('\n------------------------------------')
