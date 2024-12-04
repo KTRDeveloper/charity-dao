@@ -566,7 +566,7 @@ We want to create a proposal that will transfer 20 CHT from the treasury to the 
 In this article, we used a charity organization as a practical example to demonstrate the development, deployment, and operation of a Decentralized Autonomous Organization (DAO). We implemented the DAO in Solidity using the Openzeppelin library, deployed it to the Sepolia testnet, and verified the deployed contracts on Etherscan for further transparency. Finally, Tally was employed to demonstrate the operational aspects of the DAO.
 
 ### Acknowledgements
-Many thanks to [Ethereum Foundation(https://ethereum.foundation/) which allowed me through the [Devcon Scholars Program](https://nxbn.ethereum.foundation/scholars) to attend [Devcon 7 SEA](https://devcon.org/) where I learned most of the things that are presented in this article.
+Many thanks to [Ethereum Foundation](https://ethereum.foundation/) which allowed me through the [Devcon Scholars Program](https://nxbn.ethereum.foundation/scholars) to attend [Devcon 7 SEA](https://devcon.org/) where I learned most of the things that are presented in this article.
 
 
 
