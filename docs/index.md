@@ -1,4 +1,4 @@
-# Developing, Deploying and Operating a DAO
+# Developing, Deploying and Operating a Decentralized Autonomous Organization (DAO)
 
 ![cover](./images/cover.jfif)
 *Author: Rodrigue KONAN TCHINDA*,
@@ -82,7 +82,7 @@ contract CharityToken is ERC20, ERC20Burnable, Ownable, ERC20Permit, ERC20Votes 
 ```
 
 
-CharityTreasury is an abstract contract that implments the functionnalities we are desiring for the treasury. This treasury is xontrolled by one owner who is the only account capable of performing some operation on the treasury like minting new tokens, burning tokens, transfering assets from the treaury to another acount, etc. For the charity DAO, donations are made by interacting directly with the treasury contract. The donor has to call the donate function with the desired amount of ethers specifying whether to receive CharityTokens as reward or not. If he/She opt to recive tokens, an amount of token proportional to the number of donated ethers. The _transferEthers_ and _transferTokens_ functions are used to transfer assets from the treasury to a particular address. This address may be that of the entity the CharityDAO is willing to help. Fianly the functions  _releaseEthers_ and _releaseTokens_ are used to send the entire balance of the treasury to a given address. This could be used for instance when the treasury is going to be moved to a new adress and that the assets need to be trasfered to this address. 
+CharityTreasury is an abstract contract that implements the functionalities we desire for the treasure. This treasury is controlled by an owner which is the only account able to perform certain operations on the treasury such as minting new tokens, burning tokens, transferring assets from the treasury to another account, etc. For the Charity DAO, donations are made by interacting directly with the treasury contract. The donor must call the _donate_ function with the desired amount of ethers, specifying whether he or she wants to receive CharityTokens as a reward or not. If he chooses to receive tokens, he will receive a quantity of tokens proportional to the number of ethers donated. The _transferEthers_ and _transferTokens_ functions are used to transfer assets from the treasury to a specified address. This address may be that of the entity the CharityDAO wishes to help. Finally, the _releaseEthers_ and _releaseTokens_ functions are used to send the total treasury balance to a given address. This can be used, for example, when the treasury is to be transferred to a new address and the assets are to be transferred to that address. 
 
 ```solidity
 // ./CharityTreasury.sol
