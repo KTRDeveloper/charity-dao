@@ -1,8 +1,8 @@
 # Charity DAO
 
-This is a basic project to demonstrate how to develop and deploy a DAO.
+This is a basic project to demonstrate how to develop and deploy a DAO. For more details, head to [this page](https://ktrdeveloper.github.io/charity-dao/).
 
-Try running some of the following tasks after creating a .env file with the elements in the .env-example:
+Try running some of the following tasks after creating a .env file with the variables in the .env-example:
 
 To generate an account to be used for deployment
 ```shell
