@@ -37,7 +37,7 @@ Then initialize a new Hardhat project:
 ```shell
 npx hardhat init
 ```
-Choose 'Create a JavaScript project' and accept everything except package installation. Install the following dependencies after that:
+Choose _'Create a JavaScript project'_ and accept everything except package installation. Install the following dependencies afterward:
 
 ```shell
 yarn add --dev @nomicfoundation/hardhat-ethers @nomicfoundation/hardhat-verify ethers dotenv
@@ -54,7 +54,7 @@ To make the creation of smart contracts even easier, Openzeppelin provides a too
 
 The Charity DAO consists of three smart contracts: CharityToken, CharityGovernor and CharityTimelock. CharityTimelock is also the treasury and inherits the treasury functionalities from the CharityTreasury abstract contract.
 
-The code of the CharityToken is given below. CharityToken is an ERC20 Token that inherits a number of Openzeppelin extensions including _ERC20Votes_, _ERC20Permit_, _ERC20Burnable_, _Ownable_. _ERC20Votes_ extension adds voting capabilities to an ERC20 token. It assigns voting power to token holders based on their token balance. Hence, the more tokens a user own, the greater their voting power. The ERC20Votes extension also allows a user to delegate their voting power to another. The _ERCPermit_ extension enables token holders to allow without paying gas, third parties to transfer from their account. The _ERC20Burnable_ extension allows token holders to destroy their tokens. The _Ownable_ extension as for it, provides a basic access control mechanism, where there is an account (an owner) that can be granted exclusive access to specific functions by decorating them with the _onlyOwner_ modifier that it makes available. This extension also allows the owner to transfer the ownership to another account.
+The code of the CharityToken is given below. CharityToken is an ERC20 Token that inherits a number of other Openzeppelin extensions including _ERC20Votes_, _ERC20Permit_, _ERC20Burnable_, _Ownable_. _ERC20Votes_ extension adds voting capabilities to an ERC20 token. It assigns voting power to token holders based on their token balance. Hence, the more tokens a user own, the greater their voting power. The ERC20Votes extension also allows a user to delegate their voting power to another. The _ERCPermit_ extension enables token holders to allow without paying gas, third parties to transfer from their account. The _ERC20Burnable_ extension allows token holders to destroy their tokens. The _Ownable_ extension as for it, provides a basic access control mechanism, where there is an account (an owner) that can be granted exclusive access to specific functions by decorating them with the _onlyOwner_ modifier that it makes available. This extension also allows the owner to transfer the ownership to another account.
 
 The _mint_ function was added to CharityToken to allow the owner (by applying the _onlyOwner_ modifier) to create more supply.
 
@@ -79,7 +79,7 @@ contract CharityToken is ERC20, ERC20Burnable, Ownable, ERC20Permit, ERC20Votes 
 
 ```
 
-CharityTreasury is an abstract contract that implements the functionalities we desire for the treasure. This treasury is controlled by an owner which is the only account able to perform certain operations on the treasury such as minting new tokens, burning tokens, transferring assets from the treasury to another account, etc. For the Charity DAO, donations are made by interacting directly with the treasury contract. The donor must call the _donate_ function with the desired amount of ethers, specifying whether he or she wants to receive CharityTokens as a reward or not. If he chooses to receive tokens, he will receive a quantity of tokens proportional to the number of ethers donated. The _transferEthers_ and _transferTokens_ functions are used to transfer assets from the treasury to a specified address. This address may be that of the entity the CharityDAO wishes to help. Finally, the _releaseEthers_ and _releaseTokens_ functions are used to send the total treasury balance to a given address. This can be used, for example, when the treasury is to be transferred to a new address and the assets are to be transferred to that address. 
+CharityTreasury is an abstract contract that implements the functionalities we desire for the treasury. This treasury is controlled by an owner which is the only account able to perform certain operations on the treasury such as minting new tokens, burning tokens, transferring assets from the treasury to another account, etc. For the Charity DAO, the owner of the treasury is not an Externaly Owned Account (EOA), as we don't want a central authority to control it. The owner here will be another contract: the CharityTimelock. Therefore, the treasury's protected methods must be invoked by creating a proposal that the members should vote to approve in order for it to be executed. Donations are made by interacting directly with the treasury contract. The donor must call the _donate_ function with the desired amount of ethers, specifying whether he/she wants to receive CharityTokens as a reward or not. If he/she chooses to receive tokens, he will receive a quantity of tokens proportional to the number of ethers donated. The _transferEthers_ and _transferTokens_ functions are used to transfer assets from the treasury to a specified address. This address may be that of the entity the CharityDAO wishes to help. Note the use of the _nonReentrant_ modifier provided by the _ReentrancyGuard_ extension to protect the  _transferEthers_ method against reintrancy attacks. Finally, the _releaseEthers_ and _releaseTokens_ functions are used to send the total treasury balance to a given address. This can be used, for example, when the treasury is to be transferred to a new address and the assets are to be transferred to that address.
 
 ```solidity
 // ./CharityTreasury.sol
@@ -165,6 +165,11 @@ abstract contract CharityTreasury is Ownable, ReentrancyGuard{
 }
 ```
 
+
+The _CharityTimelock_ contract  inherits the Openzeppelin _TimelockController_ extension which adds a delay to the execution of proposals in order to give members time to cancel before a potentially dangerous operation is applied.  Its constructor expects as parameters a minimum delay __minDelay_ for the operations which represents how long to wait until it can execute a validated proposal, a list __proposers_ of accounts to be assigned _proposer_ and _cancellor_ roles, a list __executors_ of accounts to be granted the _executor_ role, an optional account to which is assigned the _admin_ role, an initial owner of the treasury as well as the address of the governance token. _CharityTimelock_ is also the contract that holds all the assets of the  DAO, including ethers and governance tokens. It then inherits the functionnalities of the treasury implemented in the _CharityTreasury_ abstract contract.
+
+
+
 ```solidity
 ...
 // ./CharityTimelock.sol
@@ -181,6 +186,10 @@ contract CharityTimelock is TimelockController, CharityTreasury {
 }
 
 ```
+
+
+CharityGovernor is responsible for managing the lifecycle of proposals and holds the key parameters that influence the governance of the DAO. It inherits a number of Openzeppelin extensions, including: _Governor_, _GovernorSettings_, _GovernorCountingSimple_, _GovernorVotes_, _GovernorVotesQuorumFraction_, _GovernorTimelockControl_. _Governor_ is the core contract that contains all the governance logic and primitives.  _GovernorSettings_ allows to update voting settings (delay, period, proposal threshold) though governance.  _GovernorCountingSimple_ extension offers 3 options to voters: _For_, _Against_, and _Abstain_ where only _For_ and _Abstain_ votes are counted towards quorum. _GovernorVotes_ allow extraction of voting weight from an _ERC20Votes_ token. _GovernorVotesQuorumFraction_ combines with _GovernorVotes_ to allow specifing the initial quorum as a fraction of the token's total supply. _GovernorTimelockControl_ binds the execution process to an instance of _TimelockController_. This adds a delay, enforced by the _TimelockController_ to all successful proposal. the constructor of _GovernorTimelockControl_ expects as parmetres the IVotes instance to determine the voting power of an account based on the token balance they hold when a proposal becomes active, the timelock controller which enforces delays on successful proposals, the _initialVotingDelay_ which is the delay since proposal is created until voting starts, _initialVotingPeriod_ which is the length of period during which members can cast their vote, _initialProposalThreshold_ which is the minimum number of votes an account must have to create a proposal, and _quorumNum_ which represents the percentage of total supply of tokens needed to aprove proposals. 
+
 
 ```solidity
 // ./CharityGovernor.sol
@@ -204,7 +213,7 @@ contract CharityGovernor is Governor, GovernorSettings, GovernorCountingSimple, 
 The source code of the enitre project can be found at https://github.com/KTRDeveloper/charity-dao.
 
 ## Deploying the DAO
-Our Charity DAO will be deployed on the Sepolia testnet. The first step is to obtain Sepolia ethers through faucets such as [Alchemy](https://www.alchemy.com/faucets/ethereum-sepolia) or [Google](https://cloud.google.com/application/web3/faucet/ethereum/sepolia). We'll then need a node connected to the testnet that will enable us to sign and send our transactions on the network. Fortunately, we won't have to configure and operate a node ourselves. Services such as [Infura](https://www.infura.io/) (Now part of [MetaMask Developer](https://developer.metamask.io/)) and [Alchemy](https://www.alchemy.com/) allow us to interact with the network without having to operate a node ourselves. For this article, we've chosen to use Infura. To use it, you'll need to create an account on Infura and log in ; then obtain and configure an API key that will be used to connect to an Infura node to relay our transactions. The steps below show how to obtain an API key on Infura.
+Our Charity DAO will be deployed on the Sepolia testnet. The first step is to obtain Sepolia ETHs through faucets such as [Alchemy](https://www.alchemy.com/faucets/ethereum-sepolia) or [Google](https://cloud.google.com/application/web3/faucet/ethereum/sepolia). We'll then need a node connected to the testnet that will enable us to sign and send our transactions on the network. Fortunately, we won't have to configure and operate a node ourselves. Services such as [Infura](https://www.infura.io/) (Now part of [MetaMask Developer](https://developer.metamask.io/)) and [Alchemy](https://www.alchemy.com/) allow us to interact with the network without having to operate a node ourselves. For this article, we've chosen to use Infura. To use it, you'll need to create an account on Infura and log in ; then obtain and configure an API key that will be used to connect to an Infura node to relay our transactions. The steps below show how to obtain an API key on Infura.
 
 1. Create an account by heading to https://developer.metamask.io/register and providing the requested information.
 2. Open the [Infura dashboard](https://developer.metamask.io/) (https://developer.metamask.io/) (Enter your login details, if needed)
@@ -239,7 +248,7 @@ To verify the contracts of the DAO, we'll need to:
 Note that the key we've created on Etherscan.io can also be used on the Sepolia testnet. 
 
 To interact with the network, we'll need several accounts. In the hardhat configuration file, accounts can be specified by filling in the accounts field of each network configuration. There are three options for that: use the node's accounts (by setting it to “remote”), a list of local accounts (by setting it to an array of hex-encoded private keys), or use a hierarchical deterministic (HD) wallet ---  a wallet which uses a seed phrase to derive public and private keys. 
-The second option is what we are going to use. For security reasons, we're not going to use the private keys of our personal accounts, but instead, we're going to generate an account dedicated solely to deployment. We will need to send some Sepolia Ethers to this account for it to be able to deploy the contracts on the Sepolia testnet. To generate this account, the _scripts/acount.js_ script can be used. We simply need to run the following command, which will then produce an address along with a private key:
+The second option is what we are going to use. For security reasons, we're not going to use the private keys of our personal accounts, but instead, we're going to generate an account dedicated solely to deployment. We will need to send some Sepolia ETHs to this account for it to be able to deploy the contracts on the Sepolia testnet. To generate this account, the _scripts/acount.js_ script can be used. We simply need to run the following command, which will then produce an address along with a private key:
 
 ```shell
 node scripts/acount.js 
@@ -417,7 +426,7 @@ npx hardhat compile
 ```
 2. Deployment on Sepolia
 
-The deployment account specified in the .env file  must have sufficient Sepolia ethers for deployment. You will need to send it Sepolia ethers from another account that has some. After that, run the following command to deploy the charity DAO.
+The deployment account specified in the .env file  must have sufficient Sepolia ETHs for deployment. You will need to send it Sepolia ETHs from another account that has some. After that, run the following command to deploy the charity DAO.
 ```shell
 npx hardhat run --network sepolia scripts/deploy.js
 ```
@@ -525,7 +534,7 @@ To interact with our DAO, we need to connect it to Tally. To do this, follow the
 ![Tally charity dao home page](./images/tally_charity_dao_home_page.png)
 
 ### The Proposal Lifecycle on Tally
-First of all, we need to transfer some Sepolia Ether to the accounts that will be used to interact with the Charity DAO. Then we'll need to connect to Tally with each of these accounts and delegate voting powers. Delegation allows a token holder to transfer his/her voting power to another user (with the possibility to withdrawn at any time) while keeping the underlying assets. In fact, only delegated tokens can participate in voting and if you wish to vote directly, you will need to delegate your voting power to yourself. To delegate voting power on Tally, simply click on the Delegate button on the DAO home page and indicate the account to which you want to delegate.
+First of all, we need to transfer some Sepolia ETH to the accounts that will be used to interact with the Charity DAO. Then we'll need to connect to Tally with each of these accounts and delegate voting powers. Delegation allows a token holder to transfer his/her voting power to another user (with the possibility to withdrawn at any time) while keeping the underlying assets. In fact, only delegated tokens can participate in voting and if you wish to vote directly, you will need to delegate your voting power to yourself. To delegate voting power on Tally, simply click on the Delegate button on the DAO home page and indicate the account to which you want to delegate.
 
 ![Delegate vote](./images/delegate-your-vote.png)
 
@@ -553,7 +562,7 @@ We want to create a proposal that will transfer 20 CHT from the treasury to the 
 
 ![Proposal page on Tally](./images/tally_proposal_page.png)
 
-6. To vote, each member must go to the CharityDAO home page, click on “Proposals” and select the proposal in the proposal list. The proposal page will then load, and the user can cast his/her vote by clicking on the “Vote onchain” button and choosing from the options. Connect with at least two of the accounts specified in the _.env_ and vote for the proposal to be validated. Please note that for experimental reasons, we've set the voting time to roughly 15 minutes. Make sure you vote within this timeframe for the vote to pass.
+6. To vote, each member must go to the CharityDAO home page, click on “Proposals” and select the proposal in the proposal list. The proposal page will then load, and the user can cast his/her vote by clicking on the “Vote onchain” button and choosing from the options. Connect with at least two of the accounts specified in the _.env_ and vote for the proposal to be validated. Please note that to allow quick testing, we've set the voting time to roughly 15 minutes. Hense, vote should be cast within this timeframe in order to pass. It is adviced not to set the voting period to less than 8 minutes since the Tally indexer can take up to 8 minutes to reflect state changes on the blockchain. 
 
 ![Voting on Tally](./images/tally_voting.png)
 
@@ -566,7 +575,7 @@ We want to create a proposal that will transfer 20 CHT from the treasury to the 
 In this article, we used a charity organization as a practical example to demonstrate the development, deployment, and operation of a Decentralized Autonomous Organization (DAO). We implemented the DAO in Solidity using the Openzeppelin library, deployed it to the Sepolia testnet, and verified the deployed contracts on Etherscan for further transparency. Finally, Tally was employed to demonstrate the operational aspects of the DAO.
 
 ### Acknowledgements
-Many thanks to [Ethereum Foundation](https://ethereum.foundation/) which allowed me through the [Devcon Scholars Program](https://nxbn.ethereum.foundation/scholars) to attend [Devcon 7 SEA](https://devcon.org/) where I learned most of the things that are presented in this article.
+Many thanks to [Ethereum Foundation](https://ethereum.foundation/) which allowed me through the [Devcon Scholars Program](https://nxbn.ethereum.foundation/scholars) to attend [Devcon 7 SEA](https://devcon.org/). Most of the things presented in this article are what I learned during the Devcon Scholars Program and the Devcon 7 SEA.
 
 
 
